@@ -1,4 +1,6 @@
 import * as path from 'path';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as eventtargets from 'aws-cdk-lib/aws-events-targets';
 import * as cdk from 'aws-cdk-lib';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
@@ -27,7 +29,6 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       domainName: 'api.mattcloudlab.dev',
       validation: acm.CertificateValidation.fromDns(zone),
     });
-
 
 
     // Cognito
@@ -71,23 +72,27 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       ],
     });
 
-    new sns.Topic(this, 'energy-monitoring-alerts-topic', {});
+    const alertsTopic = new sns.Topic(this, 'energy-monitoring-alerts-topic', {
+      displayName: 'Energy Useage Alert'
+    });
 
 
-    const energyUseageDB = new dynamodb.Table(this, 'energy-monitoring-dynamo-database', {
+    // DynamoDB
+    const energyUseageTable = new dynamodb.Table(this, 'energy-monitoring-dynamo-database', {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'date', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
 
-    energyUseageDB.addGlobalSecondaryIndex({
+    energyUseageTable.addGlobalSecondaryIndex({
       indexName: 'UserIdIndex',
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
     })
 
-    const userThreshholdDB = new dynamodb.Table(this, 'energy-monitoring-user-threshhold-db', {
+    const alertsTable = new dynamodb.Table(this, 'energy-monitoring-user-threshhold-alerts-db', {
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'alertId', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
@@ -123,9 +128,9 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       },
     });
 
-    const getUploadUrlLambda = new nodejs.NodejsFunction(this, 'GetUploadUrlFunction', {
-      entry: path.join(__dirname, '../src/handlers/energy/get-upload-url.ts'),
+    const getUploadUrlLambda = new nodejs.NodejsFunction(this, 'energy-get-upload-url-lambda', {
       handler: 'handler',
+      entry: path.join(__dirname, '../src/handlers/energy/get-upload-url.ts'),
       environment: {
         BUCKET_NAME: csvBucket.bucketName,
       },
@@ -137,23 +142,55 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       ],
     });
 
-    const processUploadLambda = new nodejs.NodejsFunction(this, 'ProcessUploadFunction', {
-      entry: path.join(__dirname, '../src/handlers/energy/process-upload.ts'),
+    const processUploadLambda = new nodejs.NodejsFunction(this, 'energy-useage-process-upload-lambda', {
       handler: 'handler',
+      entry: path.join(__dirname, '../src/handlers/energy/process-upload.ts'),
       timeout: cdk.Duration.minutes(5),
       environment: {
-        TABLE_NAME: energyUseageDB.tableName,
+        ENERGY_USEAGE_TABLE: energyUseageTable.tableName,
       },
     });
 
 
+    const manageAlertsLambda = new nodejs.NodejsFunction(this, 'energy-useage-alert-manager-lambda', {
+      handler: 'handler',
+      entry: path.join(__dirname, '../src/handlers/energy/manage-alerts.ts'),
+      runtime: lambda.Runtime.NODEJS_22_X,
+      environment: {
+        ALERTS_TABLE: alertsTable.tableName,
+        SNS_TOPIC_ARN: alertsTopic.topicArn,
+      },
+    });
+
+
+    const checkThresholdsLambda = new nodejs.NodejsFunction(this, 'energy-useage-alert-lambda', {
+      handler: 'handler',
+      entry: path.join(__dirname, '../src/handlers/energy/check-alerts.ts'),
+      runtime: lambda.Runtime.NODEJS_22_X,
+      environment: {
+        ALERTS_TABLE: alertsTable.tableName,
+        ENERGY_USEAGE_TABLE: energyUseageTable.tableName,
+        SNS_TOPIC_ARN: alertsTopic.topicArn,
+      },
+    });
+
+    // Event Bridge rule that triggers daily
+    new events.Rule(this, 'DailyThresholdCheck', {
+      schedule: events.Schedule.cron({ minute: '0', hour: '0' }),
+      targets: [new eventtargets.LambdaFunction(checkThresholdsLambda)],
+    });
 
     // Grant Permissions to Lambdas
-    energyUseageDB.grantWriteData(energyInputLambda);
+    alertsTopic.grantSubscribe(manageAlertsLambda);
+    alertsTopic.grantPublish(checkThresholdsLambda);
+    alertsTable.grantReadWriteData(manageAlertsLambda);
+    alertsTable.grantReadData(checkThresholdsLambda);
+    energyUseageTable.grantReadData(checkThresholdsLambda);
+    energyUseageTable.grantWriteData(energyInputLambda);
     userPool.grant(signupLambda, 'cognito-idp:Signup', 'cognito-idp:AdminConfirmSignUp');
     userPool.grant(signinLambda, 'cognito-idp:InitiateAuth');
     csvBucket.grantRead(processUploadLambda);
-    energyUseageDB.grantWriteData(processUploadLambda);
+    energyUseageTable.grantWriteData(processUploadLambda);
 
 
     // Adds in S3 notification for the processing of data 
@@ -211,6 +248,15 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     const energyDataUploadResource = energyResource.addResource('upload');
     const energyUploadLambdaIntegration = new apigateway.LambdaIntegration(getUploadUrlLambda);
     energyDataUploadResource.addMethod('POST', energyUploadLambdaIntegration, {
+      authorizer: { authorizerId: authorizer.ref },
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
+
+    // /alerts
+    const alerts = restApi.root.addResource('alerts');
+    const manageAlertsLambdaIntegration = new apigateway.LambdaIntegration(manageAlertsLambda);
+    alerts.addMethod('POST', manageAlertsLambdaIntegration, {
       authorizer: { authorizerId: authorizer.ref },
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
