@@ -8,3 +8,4 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent) =>
     body: JSON.stringify({ message: `Hello, world from ${event.path}` }),
   };
 }
+

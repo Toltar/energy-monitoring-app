@@ -43,6 +43,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
           mutable: true,
         },
       },
+      accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       passwordPolicy: {
         minLength: 8,
         requireLowercase: true,
@@ -98,38 +99,39 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     });
 
     // Lambda Functions
-    const signupLambda = new nodejs.NodejsFunction(this, 'signup-lambda', {
+    const commonLambdaConfig = {
       handler: 'handler',
-      entry: path.join(__dirname, '../src/handlers/auth/signup.ts'),
       runtime: lambda.Runtime.NODEJS_22_X,
+    };
+
+    const signupLambda = new nodejs.NodejsFunction(this, 'signup-lambda', {
+      entry: path.join(__dirname, '../src/handlers/auth/signup.ts'),
       environment: {
         USER_POOL_ID: userPool.userPoolId,
         CLIENT_ID: userPoolClient.userPoolClientId,
       },
+      ...commonLambdaConfig
     });
 
     const signinLambda = new nodejs.NodejsFunction(this, 'signin-lambda', {
-      handler: 'handler',
       entry: path.join(__dirname, '../src/handlers/auth/signin.ts'),
-      runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
         USER_POOL_ID: userPool.userPoolId,
         CLIENT_ID: userPoolClient.userPoolClientId,
       },
+      ...commonLambdaConfig
     });
 
     const energyInputLambda = new nodejs.NodejsFunction(this, 'energy-input-lambda', {
-      handler: 'handler',
       entry: path.join(__dirname, '../src/handlers/energy/input-handler.ts'),
-      runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
         USER_POOL_ID: userPool.userPoolId,
         CLIENT_ID: userPoolClient.userPoolClientId,
       },
+      ...commonLambdaConfig
     });
 
     const getUploadUrlLambda = new nodejs.NodejsFunction(this, 'energy-get-upload-url-lambda', {
-      handler: 'handler',
       entry: path.join(__dirname, '../src/handlers/energy/get-upload-url.ts'),
       environment: {
         BUCKET_NAME: csvBucket.bucketName,
@@ -140,48 +142,46 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
           resources: [csvBucket.arnForObjects('*')],
         }),
       ],
+      ...commonLambdaConfig
     });
 
     const processUploadLambda = new nodejs.NodejsFunction(this, 'energy-useage-process-upload-lambda', {
-      handler: 'handler',
       entry: path.join(__dirname, '../src/handlers/energy/process-upload.ts'),
       timeout: cdk.Duration.minutes(5),
       environment: {
         ENERGY_USEAGE_TABLE: energyUseageTable.tableName,
       },
+      ...commonLambdaConfig
     });
 
 
     const manageAlertsLambda = new nodejs.NodejsFunction(this, 'energy-useage-alert-manager-lambda', {
-      handler: 'handler',
       entry: path.join(__dirname, '../src/handlers/energy/manage-alerts.ts'),
-      runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
         ALERTS_TABLE: alertsTable.tableName,
         SNS_TOPIC_ARN: alertsTopic.topicArn,
       },
+      ...commonLambdaConfig
     });
 
 
     const checkThresholdsLambda = new nodejs.NodejsFunction(this, 'energy-useage-alert-lambda', {
-      handler: 'handler',
       entry: path.join(__dirname, '../src/handlers/energy/check-alerts.ts'),
-      runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
         ALERTS_TABLE: alertsTable.tableName,
         ENERGY_USEAGE_TABLE: energyUseageTable.tableName,
         SNS_TOPIC_ARN: alertsTopic.topicArn,
       },
+      ...commonLambdaConfig
     });
 
 
     const historyLambda = new nodejs.NodejsFunction(this, 'energy-monitoring-history-lambda', {
-      handler: 'handler',
       entry: path.join(__dirname, '../src/handlers/energy/get-history.ts'),
-      runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
         ENERGY_USEAGE_TABLE: energyUseageTable.tableName,
       },
+      ...commonLambdaConfig
     });
 
     // Event Bridge rule that triggers daily

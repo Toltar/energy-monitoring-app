@@ -2,5 +2,11 @@
   "hosted-zone:account=390402580441:domainName=mattcloudlab.dev:region=us-west-2": {
     "Id": "/hostedzone/Z00130613IAODOTBQKANA",
     "Name": "mattcloudlab.dev."
-  }
+  },
+  "availability-zones:account=390402580441:region=us-west-2": [
+    "us-west-2a",
+    "us-west-2b",
+    "us-west-2c",
+    "us-west-2d"
+  ]
 }
