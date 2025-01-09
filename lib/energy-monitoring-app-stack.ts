@@ -174,6 +174,16 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       },
     });
 
+
+    const historyLambda = new nodejs.NodejsFunction(this, 'energy-monitoring-history-lambda', {
+      handler: 'handler',
+      entry: path.join(__dirname, '../src/handlers/energy/get-history.ts'),
+      runtime: lambda.Runtime.NODEJS_22_X,
+      environment: {
+        ENERGY_USEAGE_TABLE: energyUseageTable.tableName,
+      },
+    });
+
     // Event Bridge rule that triggers daily
     new events.Rule(this, 'DailyThresholdCheck', {
       schedule: events.Schedule.cron({ minute: '0', hour: '0' }),
@@ -186,6 +196,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     alertsTable.grantReadWriteData(manageAlertsLambda);
     alertsTable.grantReadData(checkThresholdsLambda);
     energyUseageTable.grantReadData(checkThresholdsLambda);
+    energyUseageTable.grantReadData(historyLambda);
     energyUseageTable.grantWriteData(energyInputLambda);
     userPool.grant(signupLambda, 'cognito-idp:Signup', 'cognito-idp:AdminConfirmSignUp');
     userPool.grant(signinLambda, 'cognito-idp:InitiateAuth');
@@ -252,6 +263,18 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       authorizationType: apigateway.AuthorizationType.COGNITO,
     });
 
+
+    // /energy/history
+    const energyHistoryResource = energyResource.addResource('history');
+    const energyHistoryLambdaIntegration = new apigateway.LambdaIntegration(historyLambda);
+    energyHistoryResource.addMethod('POST', energyHistoryLambdaIntegration, {
+      authorizer: { authorizerId: authorizer.ref },
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      requestParameters: {
+        'method.request.querystring.startDate': true,
+        'method.request.querystring.endDate': true,
+      },
+    });
 
     // /alerts
     const alerts = restApi.root.addResource('alerts');
