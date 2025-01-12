@@ -1,17 +1,26 @@
 import { CognitoIdentityProvider } from '@aws-sdk/client-cognito-identity-provider';
-import { APIGatewayEvent, APIGatewayProxyHandler } from 'aws-lambda';
+import { APIGatewayEvent, APIGatewayProxyHandler, Context } from 'aws-lambda';
 import { emailRegex } from './util';
+import { createLogger, redactConfig } from '../utils/logger';
 
 const cognito = new CognitoIdentityProvider();
-const CLIENT_ID = process.env.USER_POOL_CLIENT_ID!;
+const CLIENT_ID = process.env.CLIENT_ID;
 interface SignInRequest {
   email: string;
   password: string;
 }
 
-export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent) => {
+export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, context: Context) => {
+  const logger = createLogger({
+    context,
+    event,
+    additionalOptions: {
+      redact: redactConfig
+    },
+  });
   try {
     if (!event.body) {
+      logger.warn('Missing request body');
       return {
         statusCode: 400,
         body: JSON.stringify({ message: 'Missing request body' })
@@ -20,7 +29,10 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent) =>
 
     const { email, password }: SignInRequest = JSON.parse(event.body);
 
-    if (!email || !password || !emailRegex.test(email)) {
+    logger.info({ email }, 'Processing signin request');
+
+    if (!email || !password) {
+      logger.warn({ email }, 'Missing required fields');
       return {
         statusCode: 400,
         body: JSON.stringify({ message: 'Missing required fields' })
@@ -28,6 +40,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent) =>
     }
 
     if (!emailRegex.test(email)) {
+      logger.warn({ email }, 'Email failed validation');
       return {
         statusCode: 400,
         body: JSON.stringify({ message: `Invalid email of: ${email}` })
@@ -44,8 +57,11 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent) =>
     });
 
     if (!AuthenticationResult) {
+      logger.error('Authentication result is undefined');
       throw new Error();
     }
+
+    logger.info({ email }, 'User authenticated successfully');
 
     return {
       statusCode: 200,
@@ -60,7 +76,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent) =>
     };
   }
   catch (error) {
-    console.error('Error:', error);
+    logger.error({ err: error }, 'Authentication Failed');
     if (error && error instanceof Error) {
       return {
         statusCode: error.name === 'NotAuthorizedException' ? 401 : 500,

@@ -14,9 +14,11 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 
 export interface EnergyMonitoringStackProps extends cdk.StackProps {
+  apiDomainName?: string;
   domainName?: string;
 };
 
@@ -66,8 +68,8 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       domainName: props.domainName,
     }) : undefined;
 
-    const certificate = props.domainName !== undefined ? new acm.Certificate(this, 'Certificate', {
-      domainName: props.domainName,
+    const certificate = props.apiDomainName !== undefined ? new acm.Certificate(this, 'Certificate', {
+      domainName: props.apiDomainName,
       validation: acm.CertificateValidation.fromDns(zone),
     }) : undefined;
 
@@ -120,7 +122,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
 
 
     // DynamoDB
-    const energyUseageTable = new dynamodb.Table(this, 'energy-monitoring-dynamo-database', {
+    const energyUsageTable = new dynamodb.Table(this, 'energy-monitoring-dynamo-database', {
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'date', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -134,8 +136,23 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
 
+    // Cloudwatch
+    const logGroup = new logs.LogGroup(this, 'lambda-log-group', {
+      retention: logs.RetentionDays.ONE_DAY,
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    });
+
+    new logs.MetricFilter(this, 'error-metrics-filter', {
+      logGroup,
+      filterPattern: logs.FilterPattern.literal('{ $.level = "ERROR" }'),
+      metricNamespace: 'EnergyMonitor',
+      metricName: 'ErrorCount',
+      defaultValue: 0,
+      metricValue: '1'
+    });
+
     // Lambda Functions
-    const commonLambdaConfig: Partial<lambda.FunctionProps> = {
+    const commonLambdaConfig = {
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       vpc,
@@ -143,13 +160,23 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
         subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       },
       securityGroups: [lambdaSecurityGroup],
+      logGroup,
+      tracing: lambda.Tracing.ACTIVE,
+      bundling: {
+        sourceMap: true
+      }
     };
+    const commonLambdaEnvironment = {
+      LOG_LEVEL: 'INFO',
+      NODE_OPTIONS: '--enable-source-maps'
+    }
 
     const signupLambda = new nodejs.NodejsFunction(this, 'signup-lambda', {
       entry: path.join(__dirname, '../src/handlers/auth/signup.ts'),
       environment: {
         USER_POOL_ID: userPool.userPoolId,
         CLIENT_ID: userPoolClient.userPoolClientId,
+        ...commonLambdaEnvironment
       },
       ...commonLambdaConfig
     });
@@ -159,6 +186,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       environment: {
         USER_POOL_ID: userPool.userPoolId,
         CLIENT_ID: userPoolClient.userPoolClientId,
+        ...commonLambdaEnvironment
       },
       ...commonLambdaConfig
     });
@@ -168,6 +196,8 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       environment: {
         USER_POOL_ID: userPool.userPoolId,
         CLIENT_ID: userPoolClient.userPoolClientId,
+        ENERGY_USAGE_TABLE: energyUsageTable.tableName,
+        ...commonLambdaEnvironment
       },
       ...commonLambdaConfig
     });
@@ -176,6 +206,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       entry: path.join(__dirname, '../src/handlers/energy/get-upload-url.ts'),
       environment: {
         BUCKET_NAME: csvBucket.bucketName,
+        ...commonLambdaEnvironment
       },
       ...commonLambdaConfig
     });
@@ -184,7 +215,8 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       entry: path.join(__dirname, '../src/handlers/energy/process-upload.ts'),
       timeout: cdk.Duration.minutes(5),
       environment: {
-        ENERGY_USEAGE_TABLE: energyUseageTable.tableName,
+        ENERGY_USAGE_TABLE: energyUsageTable.tableName,
+        ...commonLambdaEnvironment
       },
       ...commonLambdaConfig
     });
@@ -195,6 +227,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       environment: {
         ALERTS_TABLE: alertsTable.tableName,
         SNS_TOPIC_ARN: alertsTopic.topicArn,
+        ...commonLambdaEnvironment
       },
       ...commonLambdaConfig
     });
@@ -204,8 +237,9 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       entry: path.join(__dirname, '../src/handlers/energy/check-alerts.ts'),
       environment: {
         ALERTS_TABLE: alertsTable.tableName,
-        ENERGY_USEAGE_TABLE: energyUseageTable.tableName,
+        ENERGY_USAGE_TABLE: energyUsageTable.tableName,
         SNS_TOPIC_ARN: alertsTopic.topicArn,
+        ...commonLambdaEnvironment
       },
       ...commonLambdaConfig
     });
@@ -214,7 +248,8 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     const historyLambda = new nodejs.NodejsFunction(this, 'energy-monitoring-history-lambda', {
       entry: path.join(__dirname, '../src/handlers/energy/get-history.ts'),
       environment: {
-        ENERGY_USEAGE_TABLE: energyUseageTable.tableName,
+        ENERGY_USAGE_TABLE: energyUsageTable.tableName,
+        ...commonLambdaEnvironment
       },
       ...commonLambdaConfig
     });
@@ -230,14 +265,14 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     alertsTopic.grantPublish(checkThresholdsLambda);
     alertsTable.grantReadWriteData(manageAlertsLambda);
     alertsTable.grantReadData(checkThresholdsLambda);
-    energyUseageTable.grantReadData(checkThresholdsLambda);
-    energyUseageTable.grantReadData(historyLambda);
-    energyUseageTable.grantWriteData(energyInputLambda);
+    energyUsageTable.grantReadData(checkThresholdsLambda);
+    energyUsageTable.grantReadData(historyLambda);
+    energyUsageTable.grantWriteData(energyInputLambda);
     userPool.grant(signupLambda, 'cognito-idp:Signup', 'cognito-idp:AdminConfirmSignUp');
     userPool.grant(signinLambda, 'cognito-idp:InitiateAuth');
     csvBucket.grantRead(processUploadLambda);
     csvBucket.grantWrite(getUploadUrlLambda);
-    energyUseageTable.grantWriteData(processUploadLambda);
+    energyUsageTable.grantWriteData(processUploadLambda);
 
 
     // Adds in S3 notification for the processing of data 
@@ -248,8 +283,8 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
 
 
     // API Gateway
-    const apiDomainName: apigateway.DomainNameOptions | undefined = props.domainName !== undefined && certificate !== undefined ? {
-      domainName: props.domainName,
+    const apiDomainName: apigateway.DomainNameOptions | undefined = props.apiDomainName !== undefined && certificate !== undefined ? {
+      domainName: props.apiDomainName,
       certificate: certificate
     } : undefined;
     const restApi = new apigateway.RestApi(this, 'energy-monitoring-rest-api-gateway', {
@@ -299,7 +334,6 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     const energyUploadLambdaIntegration = new apigateway.LambdaIntegration(getUploadUrlLambda);
     energyDataUploadResource.addMethod('POST', energyUploadLambdaIntegration, commonAuthorizerProps);
 
-
     // /energy/history
     const energyHistoryResource = energyResource.addResource('history');
     const energyHistoryLambdaIntegration = new apigateway.LambdaIntegration(historyLambda);
@@ -318,13 +352,13 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
 
 
     // Route53 A Record
-    if (props.domainName && zone) {
+    if (props.apiDomainName && zone) {
       new route53.ARecord(this, 'ApiAliasRecord', {
         zone,
         target: route53.RecordTarget.fromAlias(
           new targets.ApiGateway(restApi)
         ),
-        recordName: props.domainName,
+        recordName: props.apiDomainName,
       });
     }
 
@@ -336,6 +370,6 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId });
     new cdk.CfnOutput(this, 'UserPoolClientId', { value: userPoolClient.userPoolClientId });
     new cdk.CfnOutput(this, 'ApiUrl', { value: restApi.url });
-    new cdk.CfnOutput(this, 'ApiDomainName', { value: props.domainName ? props.domainName : '' });
+    new cdk.CfnOutput(this, 'ApiDomainName', { value: props.apiDomainName ? props.apiDomainName : '' });
   }
 }
