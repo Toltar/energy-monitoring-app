@@ -3,18 +3,13 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { PutCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { createLogger, redactConfig } from '../utils/logger';
 import { dateInputStringToDate, isValidDateStringInput } from '../utils/date-input-string';
+import { EnergyUsageDataInput } from '../../types/energy-data';
 
 const client = new DynamoDBClient();
 const docClient = DynamoDBDocumentClient.from(client);
 const ENERGY_USAGE_TABLE = process.env.ENERGY_USAGE_TABLE!;
 
-interface EnergyData {
-  date: string;
-  usage: number;
-}
-
-// TODO: Add more errors along the lines of invalid 
-
+// TODO: Add more errors along the lines of invalid data 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, context: Context) => {
   const logger = createLogger({
     context,
@@ -46,7 +41,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
 
     logger.info({ body: event.body }, 'Parsing request body');
 
-    const data: EnergyData = JSON.parse(event.body);
+    const data: EnergyUsageDataInput = JSON.parse(event.body);
 
     logger.info({ data }, 'Request body parsed');
 

@@ -1,6 +1,4 @@
 import * as path from 'path';
-import * as events from 'aws-cdk-lib/aws-events';
-import * as eventtargets from 'aws-cdk-lib/aws-events-targets';
 import * as cdk from 'aws-cdk-lib';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
@@ -16,6 +14,7 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
+import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export interface EnergyMonitoringStackProps extends cdk.StackProps {
   apiDomainName?: string;
@@ -126,14 +125,14 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'date', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST
     });
 
     const alertsTable = new dynamodb.Table(this, 'energy-monitoring-user-threshhold-alerts-db', {
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'alertId', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST
     });
 
     // Cloudwatch
@@ -212,7 +211,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     });
 
     const processUploadLambda = new nodejs.NodejsFunction(this, 'energy-useage-process-upload-lambda', {
-      entry: path.join(__dirname, '../src/handlers/energy/process-upload.ts'),
+      entry: path.join(__dirname, '../src/handlers/event-handlers/process-upload.ts'),
       timeout: cdk.Duration.minutes(5),
       environment: {
         ENERGY_USAGE_TABLE: energyUsageTable.tableName,
@@ -233,8 +232,8 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     });
 
 
-    const checkThresholdsLambda = new nodejs.NodejsFunction(this, 'energy-useage-alert-lambda', {
-      entry: path.join(__dirname, '../src/handlers/energy/check-alerts.ts'),
+    const checkThresholdsFromIncomingDataLambda = new nodejs.NodejsFunction(this, 'energy-useage-incoming-data-alert-lambda', {
+      entry: path.join(__dirname, '../src/handlers/event-handlers/check-alerts-with-incoming-data.ts'),
       environment: {
         ALERTS_TABLE: alertsTable.tableName,
         ENERGY_USAGE_TABLE: energyUsageTable.tableName,
@@ -254,18 +253,19 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       ...commonLambdaConfig
     });
 
-    // Event Bridge rule that triggers daily
-    new events.Rule(this, 'DailyThresholdCheck', {
-      schedule: events.Schedule.cron({ minute: '0', hour: '0' }),
-      targets: [new eventtargets.LambdaFunction(checkThresholdsLambda)],
-    });
+    // Lambda Event Sources
+    checkThresholdsFromIncomingDataLambda.addEventSource(new DynamoEventSource(energyUsageTable, {
+      startingPosition: lambda.StartingPosition.LATEST
+    }));
+
+
 
     // Grant Permissions to Lambdas
     alertsTopic.grantSubscribe(manageAlertsLambda);
-    alertsTopic.grantPublish(checkThresholdsLambda);
+    alertsTopic.grantPublish(checkThresholdsFromIncomingDataLambda);
     alertsTable.grantReadWriteData(manageAlertsLambda);
-    alertsTable.grantReadData(checkThresholdsLambda);
-    energyUsageTable.grantReadData(checkThresholdsLambda);
+    alertsTable.grantReadData(checkThresholdsFromIncomingDataLambda);
+    energyUsageTable.grantReadData(checkThresholdsFromIncomingDataLambda);
     energyUsageTable.grantReadData(historyLambda);
     energyUsageTable.grantWriteData(energyInputLambda);
     userPool.grant(signupLambda, 'cognito-idp:Signup', 'cognito-idp:AdminConfirmSignUp');

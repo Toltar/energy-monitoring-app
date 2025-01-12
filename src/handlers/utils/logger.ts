@@ -1,9 +1,9 @@
 import pino from 'pino';
-import { Context, APIGatewayProxyEvent, S3Event } from 'aws-lambda';
+import { Context, APIGatewayProxyEvent, S3Event, DynamoDBStreamEvent } from 'aws-lambda';
 
 interface LoggerOptions {
   context?: Context;
-  event?: APIGatewayProxyEvent | S3Event;
+  event?: APIGatewayProxyEvent | S3Event | DynamoDBStreamEvent;
   additionalOptions?: pino.LoggerOptions;
 }
 
