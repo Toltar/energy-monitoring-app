@@ -12,23 +12,64 @@ import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sns from 'aws-cdk-lib/aws-sns';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 
+export interface EnergyMonitoringStackProps extends cdk.StackProps {
+  domainName?: string;
+};
+
 export class EnergyMonitoringAppStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: EnergyMonitoringStackProps) {
     super(scope, id, props);
 
-    // Route 53 and Certificate
-    const zone = route53.HostedZone.fromLookup(this, 'Zone', {
-      domainName: 'mattcloudlab.dev',
+    // VPC Configuration
+    const vpc = new ec2.Vpc(this, 'energy-monitoring-vpc', {
+      maxAzs: 2,
+      natGateways: 1,
+      subnetConfiguration: [
+        {
+          name: 'Private',
+          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+          cidrMask: 24
+        },
+        {
+          name: 'Public',
+          subnetType: ec2.SubnetType.PUBLIC,
+          cidrMask: 24
+        },
+      ],
     });
 
-    const certificate = new acm.Certificate(this, 'Certificate', {
-      domainName: 'api.mattcloudlab.dev',
-      validation: acm.CertificateValidation.fromDns(zone),
+
+    vpc.addGatewayEndpoint('energy-monitoring-dynamodb-gateway-endpoint', {
+      service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
     });
+
+    vpc.addGatewayEndpoint('energy-monitoring-s3-gatway-endpoint', {
+      service: ec2.GatewayVpcEndpointAwsService.S3,
+    });
+
+    vpc.addInterfaceEndpoint('energy-monitoring-sns-gateway-endpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.SNS,
+    });
+
+    const lambdaSecurityGroup = new ec2.SecurityGroup(this, 'energy-monitoring-lambda-sg', {
+      vpc,
+      description: 'Security group for the Lambda functions',
+      allowAllOutbound: true
+    });
+
+    // Route 53 and Certificate
+    const zone = props.domainName !== undefined ? route53.HostedZone.fromLookup(this, 'Zone', {
+      domainName: props.domainName,
+    }) : undefined;
+
+    const certificate = props.domainName !== undefined ? new acm.Certificate(this, 'Certificate', {
+      domainName: props.domainName,
+      validation: acm.CertificateValidation.fromDns(zone),
+    }) : undefined;
 
 
     // Cognito
@@ -80,16 +121,11 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
 
     // DynamoDB
     const energyUseageTable = new dynamodb.Table(this, 'energy-monitoring-dynamo-database', {
-      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'date', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
-
-    energyUseageTable.addGlobalSecondaryIndex({
-      indexName: 'UserIdIndex',
-      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
-    })
 
     const alertsTable = new dynamodb.Table(this, 'energy-monitoring-user-threshhold-alerts-db', {
       partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
@@ -99,9 +135,14 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     });
 
     // Lambda Functions
-    const commonLambdaConfig = {
+    const commonLambdaConfig: Partial<lambda.FunctionProps> = {
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
+      vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+      },
+      securityGroups: [lambdaSecurityGroup],
     };
 
     const signupLambda = new nodejs.NodejsFunction(this, 'signup-lambda', {
@@ -136,12 +177,6 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       environment: {
         BUCKET_NAME: csvBucket.bucketName,
       },
-      initialPolicy: [
-        new iam.PolicyStatement({
-          actions: ['s3:PutObject'],
-          resources: [csvBucket.arnForObjects('*')],
-        }),
-      ],
       ...commonLambdaConfig
     });
 
@@ -201,6 +236,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     userPool.grant(signupLambda, 'cognito-idp:Signup', 'cognito-idp:AdminConfirmSignUp');
     userPool.grant(signinLambda, 'cognito-idp:InitiateAuth');
     csvBucket.grantRead(processUploadLambda);
+    csvBucket.grantWrite(getUploadUrlLambda);
     energyUseageTable.grantWriteData(processUploadLambda);
 
 
@@ -212,12 +248,13 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
 
 
     // API Gateway
+    const apiDomainName: apigateway.DomainNameOptions | undefined = props.domainName !== undefined && certificate !== undefined ? {
+      domainName: props.domainName,
+      certificate: certificate
+    } : undefined;
     const restApi = new apigateway.RestApi(this, 'energy-monitoring-rest-api-gateway', {
       restApiName: 'Energey Monitoring API',
-      domainName: {
-        domainName: 'api.mattcloudlab.dev',
-        certificate: certificate,
-      },
+      domainName: apiDomainName
     });
 
     // Authorizer
@@ -228,6 +265,11 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       providerArns: [userPool.userPoolArn],
       restApiId: restApi.restApiId,
     });
+
+    const commonAuthorizerProps: apigateway.MethodOptions = {
+      authorizer: { authorizerId: authorizer.attrAuthorizerId },
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    };
 
     // Auth endpoints
     // /auth
@@ -250,54 +292,50 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     // /energy/input
     const energyInputLambdaIntegration = new apigateway.LambdaIntegration(energyInputLambda);
     const energyInputResource = energyResource.addResource('input');
-    energyInputResource.addMethod('POST', energyInputLambdaIntegration, {
-      authorizer: { authorizerId: authorizer.ref },
-      authorizationType: apigateway.AuthorizationType.COGNITO
-    });
+    energyInputResource.addMethod('POST', energyInputLambdaIntegration, commonAuthorizerProps);
 
     // /energy/upload
     const energyDataUploadResource = energyResource.addResource('upload');
     const energyUploadLambdaIntegration = new apigateway.LambdaIntegration(getUploadUrlLambda);
-    energyDataUploadResource.addMethod('POST', energyUploadLambdaIntegration, {
-      authorizer: { authorizerId: authorizer.ref },
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-    });
+    energyDataUploadResource.addMethod('POST', energyUploadLambdaIntegration, commonAuthorizerProps);
 
 
     // /energy/history
     const energyHistoryResource = energyResource.addResource('history');
     const energyHistoryLambdaIntegration = new apigateway.LambdaIntegration(historyLambda);
     energyHistoryResource.addMethod('POST', energyHistoryLambdaIntegration, {
-      authorizer: { authorizerId: authorizer.ref },
-      authorizationType: apigateway.AuthorizationType.COGNITO,
       requestParameters: {
         'method.request.querystring.startDate': true,
         'method.request.querystring.endDate': true,
       },
+      ...commonAuthorizerProps
     });
 
     // /alerts
     const alerts = restApi.root.addResource('alerts');
     const manageAlertsLambdaIntegration = new apigateway.LambdaIntegration(manageAlertsLambda);
-    alerts.addMethod('POST', manageAlertsLambdaIntegration, {
-      authorizer: { authorizerId: authorizer.ref },
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-    });
+    alerts.addMethod('POST', manageAlertsLambdaIntegration, commonAuthorizerProps);
 
 
     // Route53 A Record
-    new route53.ARecord(this, 'ApiAliasRecord', {
-      zone,
-      target: route53.RecordTarget.fromAlias(
-        new targets.ApiGateway(restApi)
-      ),
-      recordName: 'api.mattcloudlab.dev',
-    });
+    if (props.domainName && zone) {
+      new route53.ARecord(this, 'ApiAliasRecord', {
+        zone,
+        target: route53.RecordTarget.fromAlias(
+          new targets.ApiGateway(restApi)
+        ),
+        recordName: props.domainName,
+      });
+    }
 
 
     // Outputs
+    new cdk.CfnOutput(this, 'VpcId', { value: vpc.vpcId });
+    new cdk.CfnOutput(this, 'PrivateSubnets', { value: vpc.privateSubnets.map(subnet => subnet.subnetId).join(',') });
+    new cdk.CfnOutput(this, 'PublicSubnets', { value: vpc.publicSubnets.map(subnet => subnet.subnetId).join(',') });
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId });
     new cdk.CfnOutput(this, 'UserPoolClientId', { value: userPoolClient.userPoolClientId });
     new cdk.CfnOutput(this, 'ApiUrl', { value: restApi.url });
+    new cdk.CfnOutput(this, 'ApiDomainName', { value: props.domainName ? props.domainName : '' });
   }
 }
