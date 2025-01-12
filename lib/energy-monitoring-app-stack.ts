@@ -102,8 +102,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       },
     });
 
-
-
+    // S3
     const csvBucket = new s3.Bucket(this, 'energy-monitoring-bucket', {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       cors: [
@@ -115,6 +114,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       ],
     });
 
+    // SNS
     const alertsTopic = new sns.Topic(this, 'energy-monitoring-alerts-topic', {
       displayName: 'Energy Useage Alert'
     });
@@ -257,8 +257,6 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     checkThresholdsFromIncomingDataLambda.addEventSource(new DynamoEventSource(energyUsageTable, {
       startingPosition: lambda.StartingPosition.LATEST
     }));
-
-
 
     // Grant Permissions to Lambdas
     alertsTopic.grantSubscribe(manageAlertsLambda);
