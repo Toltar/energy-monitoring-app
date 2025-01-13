@@ -75,7 +75,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
     logger.info({ data }, 'Energy data was saved successfully');
 
     return {
-      statusCode: 200,
+      statusCode: 201,
       body: JSON.stringify({
         message: 'Energy data saved successfully'
       })

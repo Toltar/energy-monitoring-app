@@ -1,0 +1,306 @@
+{
+	"info": {
+		"_postman_id": "b560efc7-d30e-4bb2-9aed-b29cbc0c78a2",
+		"name": "Energy API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34110753"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "signup",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"matthew@matthewdickens.com\",\r\n    \"password\": \"M@ttR0cks$\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_API_URL}}/auth/signup",
+							"host": [
+								"{{BASE_API_URL}}"
+							],
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "signin",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"matthew@matthewdickens.com\",\r\n    \"password\": \"M@ttR0cks$\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_API_URL}}/auth/signin",
+							"host": [
+								"{{BASE_API_URL}}"
+							],
+							"path": [
+								"auth",
+								"signin"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "The authentication for the Energy Monitoring API"
+		},
+		{
+			"name": "energy",
+			"item": [
+				{
+					"name": "alerts",
+					"item": [
+						{
+							"name": "create_alert_threshold",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{BASE_API_URL}}/alerts",
+									"host": [
+										"{{BASE_API_URL}}"
+									],
+									"path": [
+										"alerts"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "input",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"date\": \"2025-01-12\",\r\n    \"usage\": 10\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_API_URL}}/energy/input",
+							"host": [
+								"{{BASE_API_URL}}"
+							],
+							"path": [
+								"energy",
+								"input"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_presigned_url",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_API_URL}}/energy/upload",
+							"host": [
+								"{{BASE_API_URL}}"
+							],
+							"path": [
+								"energy",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "history",
+					"protocolProfileBehavior": {
+						"protocolVersion": "auto"
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_API_URL}}/energy/history?startDate=2025-01-01&endDate=2025-01-13",
+							"host": [
+								"{{BASE_API_URL}}"
+							],
+							"path": [
+								"energy",
+								"history"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2025-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-01-13"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "eyJraWQiOiIxWnZmanF1VWtPSXppOTJVcGlMZHc3ZWE2dUh4RUVTQ2xZODFybUQ4T3Z3PSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJhODIxNTMyMC1kMGIxLTcwNDUtYTdmNy03NjE2ZDBhYWQ4MDMiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy13ZXN0LTIuYW1hem9uYXdzLmNvbVwvdXMtd2VzdC0yXzFBQXRQMWZoVyIsImNvZ25pdG86dXNlcm5hbWUiOiJtYXR0aGV3QG1hdHRoZXdkaWNrZW5zLmNvbSIsIm9yaWdpbl9qdGkiOiI2OTgyNzRiMC03MjAxLTQ3ZWItYTUzYS00ODdkMGY2YjhhZTQiLCJhdWQiOiI2azJpNzZzNWo4MjNldDVuZGwwZm80ZmVvYSIsImV2ZW50X2lkIjoiMTBhNDA0ZmEtNTQ1Yy00ZjgzLWExNWQtMzg0YjYyYzMxOTcyIiwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE3MzY3MzYyNjIsImV4cCI6MTczNjczOTg2MiwiaWF0IjoxNzM2NzM2MjYyLCJqdGkiOiJiMzMyZTA3YS1iY2MyLTRlYTctOWQ1NS0yMmRiMTFlNzNmZDgiLCJlbWFpbCI6Im1hdHRoZXdAbWF0dGhld2RpY2tlbnMuY29tIn0.EgcMKdEsgJEmJq4YE2POx-YY2YoYXeTb5uQcQIajhXFqIuitOuGnUDDClvL0vWowObAYzSh6JylI4e1N6QjnjnGtEi6G3zucjF0YGoPagsOZPMxBtFBGATmbj3d2aEv-kifnBRJ7ZqW9a-pwZyqeVEXLXzHrQO_W9SOM4MT38cQwCVzrwSzZF9rwSmHuYwyqXGmMtvcVg1B5W3HVXvIHcTVk4j3Cv-mTwoskW3pCuCV4NKKp6WlnXYYxZvrKU5pn2pFUyw6IkcvRZZlOcJxp4LNURWRfyMO34trLQCLQwZxN6v3NO0WoqmkoH3bPC5hhdFUYotKfsqDb9UFo21JbXw",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "upload_file_with_presigned_url",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "file",
+					"file": {
+						"src": "postman-cloud:///1efd09b7-cad1-4180-9469-d9b2eaee92ff"
+					}
+				},
+				"url": {
+					"raw": "https://energymonitoringappstack-energymonitoringbucketb5c-rlbc3uijuywg.s3.us-west-2.amazonaws.com/uploads/a87143e0-90b1-70c4-f2dd-bed06086428b/7e4e7f95-6b15-4437-be09-c1e1f0306d9c.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAVVZOOT7MTM2XCXMB%2F20250112%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250112T063739Z&X-Amz-Expires=600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEOf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDN9F%2FdKiyI2nYSmRKuOz97sqKW7p3g1elOk6C9NGeCUwIgDekE%2BpG1Y8fPxP6pp1a2bf7LgepGZbr%2BdwhVnGvRTh4q3AMI0P%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgwzOTA0MDI1ODA0NDEiDB1jpX4%2FSq3LnPHDZyqwA6uGEY%2ByAcGitQPGquiN2l5AYtt%2BjSuKxCLEao9d0EwzEkQrR3%2FDsaiCRAQ2wHGJBbFmZlcnhtniOOH4C%2FwUaUHUN4r0DpN0mH%2FtyBzEhpqdMhJD9vfWX0Jph9PpxEGnZnKPMKmGmcajek1ym21YSBn7zu4JUHgP7JpS3OkQ6Xb6aZwMYSv7UaMqvlqc0jrxDwa5QWZMasztRjockUM3rwf4eACjhHktKd2E89UdcdSf6K%2ByYgO46p3hG7qZF73dficbzh4%2FFMke7dndUXWlQ3SlWDwIk%2BdijjIyN6Q%2Bd4%2FTgqxK8pOgP0CKHNjtYWbNkPObIVijpPgMBoLjQ8GLBw9XU92kFY4gXFaGL5JPyG%2BaMg%2BVccQBJKIVseNCBduc9dNe3mwfczyoEXdAEhuzrw5ufmj%2Bn0pmTsK9MNQc1wk1pTXOzsFxEu8JcldspA3Ms4y0nfUHv4mdEdNsU6PTRycwPmlftTQrmtydak5dRBH7PorVmKH%2FnTvIbJQzGmU4PaksOTnm5RrklTpO0uimQAm1pvalptnl%2BN5MhoFmFQ3NILyB4vGsejobjinxmpchxzCyxo28BjqeAY7mgTzAp0w3%2FAwJdg%2FINGtnjHn%2Bo8ihG4PlG8xCKVphc5qu5pVdc5ABeUbhbJSwahlQxk%2BfZS9umg8y3kdDgN6xIFaCl%2BQO%2BWfHvXn18XIg7dlpOMC%2BpP0Tc7m4YYmErBXf9gtse4M7tqC1r%2Bga4HCAZYXNhV4jZvFnpTtt2IEOF%2BIxvWR5huxN62CkWbo8Ba9ebhjvg6ayPxAlIu65&X-Amz-Signature=9825e0ebad742a57c0397c3e50349c4b0b7a66aa9207cae3586c3dbf9e245501&X-Amz-SignedHeaders=host&x-amz-meta-userid=a87143e0-90b1-70c4-f2dd-bed06086428b&x-id=PutObject",
+					"protocol": "https",
+					"host": [
+						"energymonitoringappstack-energymonitoringbucketb5c-rlbc3uijuywg",
+						"s3",
+						"us-west-2",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"uploads",
+						"a87143e0-90b1-70c4-f2dd-bed06086428b",
+						"7e4e7f95-6b15-4437-be09-c1e1f0306d9c.csv"
+					],
+					"query": [
+						{
+							"key": "X-Amz-Algorithm",
+							"value": "AWS4-HMAC-SHA256"
+						},
+						{
+							"key": "X-Amz-Content-Sha256",
+							"value": "UNSIGNED-PAYLOAD"
+						},
+						{
+							"key": "X-Amz-Credential",
+							"value": "ASIAVVZOOT7MTM2XCXMB%2F20250112%2Fus-west-2%2Fs3%2Faws4_request"
+						},
+						{
+							"key": "X-Amz-Date",
+							"value": "20250112T063739Z"
+						},
+						{
+							"key": "X-Amz-Expires",
+							"value": "600"
+						},
+						{
+							"key": "X-Amz-Security-Token",
+							"value": "IQoJb3JpZ2luX2VjEOf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDN9F%2FdKiyI2nYSmRKuOz97sqKW7p3g1elOk6C9NGeCUwIgDekE%2BpG1Y8fPxP6pp1a2bf7LgepGZbr%2BdwhVnGvRTh4q3AMI0P%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgwzOTA0MDI1ODA0NDEiDB1jpX4%2FSq3LnPHDZyqwA6uGEY%2ByAcGitQPGquiN2l5AYtt%2BjSuKxCLEao9d0EwzEkQrR3%2FDsaiCRAQ2wHGJBbFmZlcnhtniOOH4C%2FwUaUHUN4r0DpN0mH%2FtyBzEhpqdMhJD9vfWX0Jph9PpxEGnZnKPMKmGmcajek1ym21YSBn7zu4JUHgP7JpS3OkQ6Xb6aZwMYSv7UaMqvlqc0jrxDwa5QWZMasztRjockUM3rwf4eACjhHktKd2E89UdcdSf6K%2ByYgO46p3hG7qZF73dficbzh4%2FFMke7dndUXWlQ3SlWDwIk%2BdijjIyN6Q%2Bd4%2FTgqxK8pOgP0CKHNjtYWbNkPObIVijpPgMBoLjQ8GLBw9XU92kFY4gXFaGL5JPyG%2BaMg%2BVccQBJKIVseNCBduc9dNe3mwfczyoEXdAEhuzrw5ufmj%2Bn0pmTsK9MNQc1wk1pTXOzsFxEu8JcldspA3Ms4y0nfUHv4mdEdNsU6PTRycwPmlftTQrmtydak5dRBH7PorVmKH%2FnTvIbJQzGmU4PaksOTnm5RrklTpO0uimQAm1pvalptnl%2BN5MhoFmFQ3NILyB4vGsejobjinxmpchxzCyxo28BjqeAY7mgTzAp0w3%2FAwJdg%2FINGtnjHn%2Bo8ihG4PlG8xCKVphc5qu5pVdc5ABeUbhbJSwahlQxk%2BfZS9umg8y3kdDgN6xIFaCl%2BQO%2BWfHvXn18XIg7dlpOMC%2BpP0Tc7m4YYmErBXf9gtse4M7tqC1r%2Bga4HCAZYXNhV4jZvFnpTtt2IEOF%2BIxvWR5huxN62CkWbo8Ba9ebhjvg6ayPxAlIu65"
+						},
+						{
+							"key": "X-Amz-Signature",
+							"value": "9825e0ebad742a57c0397c3e50349c4b0b7a66aa9207cae3586c3dbf9e245501"
+						},
+						{
+							"key": "X-Amz-SignedHeaders",
+							"value": "host"
+						},
+						{
+							"key": "x-amz-meta-userid",
+							"value": "a87143e0-90b1-70c4-f2dd-bed06086428b"
+						},
+						{
+							"key": "x-id",
+							"value": "PutObject"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_API_URL",
+			"value": "https://api.mattcloudlab.dev",
+			"type": "string"
+		}
+	]
+}

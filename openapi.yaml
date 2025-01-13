@@ -1,0 +1,346 @@
+openapi: 3.0.0
+info:
+  title: Home Energy Monitoring API
+  description: API for monitoring and managing home energy consumption
+  version: 1.0.0
+
+servers:
+  - url: https://api.mattcloudlab.dev
+    description: Production server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    EnergyInput:
+      type: object
+      required:
+        - date
+        - usage
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2024-06-10"
+        usage:
+          type: number
+          format: float
+          example: 23.2
+
+    EnergyUsage:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2024-06-10"
+        usage:
+          type: number
+          format: float
+          example: 25.5
+
+    Alert:
+      type: object
+      required:
+        - threshold
+      properties:
+        threshold:
+          type: number
+          format: float
+          example: 32.5
+
+    UploadUrl:
+      type: object
+      properties:
+        uploadUrl:
+          type: string
+          format: uri
+          example: "https://energymonitoringappstack-energymonitoringbucketb5c-rlbc3uijuywg.s3.us-west-2.amazonaws.com/uploads/a87143e0-90b1-70c4-f2dd-bed06086428b/7e4e7f95-6b15-4437-be09-c1e1f0306d9c.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAVVZOOT7MTM2XCXMB%2F20250112%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250112T063739Z&X-Amz-Expires=600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEOf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDN9F%2FdKiyI2nYSmRKuOz97sqKW7p3g1elOk6C9NGeCUwIgDekE%2BpG1Y8fPxP6pp1a2bf7LgepGZbr%2BdwhVnGvRTh4q3AMI0P%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgwzOTA0MDI1ODA0NDEiDB1jpX4%2FSq3LnPHDZyqwA6uGEY%2ByAcGitQPGquiN2l5AYtt%2BjSuKxCLEao9d0EwzEkQrR3%2FDsaiCRAQ2wHGJBbFmZlcnhtniOOH4C%2FwUaUHUN4r0DpN0mH%2FtyBzEhpqdMhJD9vfWX0Jph9PpxEGnZnKPMKmGmcajek1ym21YSBn7zu4JUHgP7JpS3OkQ6Xb6aZwMYSv7UaMqvlqc0jrxDwa5QWZMasztRjockUM3rwf4eACjhHktKd2E89UdcdSf6K%2ByYgO46p3hG7qZF73dficbzh4%2FFMke7dndUXWlQ3SlWDwIk%2BdijjIyN6Q%2Bd4%2FTgqxK8pOgP0CKHNjtYWbNkPObIVijpPgMBoLjQ8GLBw9XU92kFY4gXFaGL5JPyG%2BaMg%2BVccQBJKIVseNCBduc9dNe3mwfczyoEXdAEhuzrw5ufmj%2Bn0pmTsK9MNQc1wk1pTXOzsFxEu8JcldspA3Ms4y0nfUHv4mdEdNsU6PTRycwPmlftTQrmtydak5dRBH7PorVmKH%2FnTvIbJQzGmU4PaksOTnm5RrklTpO0uimQAm1pvalptnl%2BN5MhoFmFQ3NILyB4vGsejobjinxmpchxzCyxo28BjqeAY7mgTzAp0w3%2FAwJdg%2FINGtnjHn%2Bo8ihG4PlG8xCKVphc5qu5pVdc5ABeUbhbJSwahlQxk%2BfZS9umg8y3kdDgN6xIFaCl%2BQO%2BWfHvXn18XIg7dlpOMC%2BpP0Tc7m4YYmErBXf9gtse4M7tqC1r%2Bga4HCAZYXNhV4jZvFnpTtt2IEOF%2BIxvWR5huxN62CkWbo8Ba9ebhjvg6ayPxAlIu65&X-Amz-Signature=9825e0ebad742a57c0397c3e50349c4b0b7a66aa9207cae3586c3dbf9e245501&X-Amz-SignedHeaders=host&x-amz-meta-userid=a87143e0-90b1-70c4-f2dd-bed06086428b&x-id=PutObject"
+
+    SignupRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          example: "********"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          example: "********"
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        message:
+          type: string
+          example: "Successfully authenticated"
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+
+paths:
+  /auth/signup:
+    post:
+      summary: Register a new user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      summary: Authenticate user and retrieve token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /energy/input:
+    post:
+      summary: Submit energy usage data manually
+      tags:
+        - Energy Data
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnergyInput'
+      responses:
+        '201':
+          description: Energy data saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Energy data saved successfully"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /energy/upload:
+    post:
+      summary: Get pre-signed URL for CSV upload
+      tags:
+        - Energy Data
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrl'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /energy/history:
+    get:
+      summary: Retrieve historical energy usage data
+      tags:
+        - Energy Data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2024-06-01"
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2024-06-10"
+      responses:
+        '200':
+          description: Historical energy usage data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnergyUsage'
+        '400':
+          description: Invalid date range
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /alerts:
+    post:
+      summary: Set energy usage threshold for alerts
+      tags:
+        - Alerts
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Alert'
+      responses:
+        '201':
+          description: Alert threshold set successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Alert threshold set successfully"
+        '400':
+          description: Invalid threshold
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
