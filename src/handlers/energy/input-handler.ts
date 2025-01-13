@@ -4,6 +4,7 @@ import { PutCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { createLogger, redactConfig } from '../utils/logger';
 import { dateInputStringToDate, isValidDateStringInput } from '../utils/date-input-string';
 import { EnergyUsageDataInput } from '../../types/energy-data';
+import { emailRegex } from '../auth/util';
 
 const client = new DynamoDBClient();
 const docClient = DynamoDBDocumentClient.from(client);
@@ -28,8 +29,15 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
     }
 
     const authorizer = event.requestContext.authorizer;
+    if (!authorizer) {
+      logger.warn('Unauthorized request');
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ message: 'Unauthorized' })
+      };
+    }
 
-    const userId: string = authorizer?.claims.sub;
+    const userId: string = authorizer.claims.sub;
 
     if (!userId) {
       logger.warn({ userId }, 'Unauthorized request');

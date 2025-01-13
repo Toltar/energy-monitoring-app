@@ -236,7 +236,6 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       entry: path.join(__dirname, '../src/handlers/event-handlers/check-alerts-with-incoming-data.ts'),
       environment: {
         ALERTS_TABLE: alertsTable.tableName,
-        ENERGY_USAGE_TABLE: energyUsageTable.tableName,
         SNS_TOPIC_ARN: alertsTopic.topicArn,
         ...commonLambdaEnvironment
       },
@@ -335,7 +334,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     // /energy/history
     const energyHistoryResource = energyResource.addResource('history');
     const energyHistoryLambdaIntegration = new apigateway.LambdaIntegration(historyLambda);
-    energyHistoryResource.addMethod('POST', energyHistoryLambdaIntegration, {
+    energyHistoryResource.addMethod('GET', energyHistoryLambdaIntegration, {
       requestParameters: {
         'method.request.querystring.startDate': true,
         'method.request.querystring.endDate': true,

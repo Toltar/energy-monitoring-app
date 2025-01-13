@@ -18,8 +18,8 @@ function isThresholdInput(input: unknown): input is ThresholdInput {
   return typeof input === 'object'
     && input !== undefined
     && input !== null
-    && 'theshold' in input
-    && typeof input.theshold === 'number';
+    && 'threshold' in input
+    && typeof input.threshold === 'number';
 }
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, context: Context) => {
@@ -82,6 +82,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
       TableName: ALERTS_TABLE,
       Item: {
         userId: userId,
+        email: userEmail,
         threshold: body.threshold
       }
     }));

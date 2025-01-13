@@ -1,7 +1,7 @@
 import { CognitoIdentityProvider } from '@aws-sdk/client-cognito-identity-provider';
 import { APIGatewayEvent, APIGatewayProxyHandler, Context } from 'aws-lambda';
-import { emailRegex } from './util';
 import { createLogger, redactConfig } from '../utils/logger';
+import { emailRegex } from '../utils/email';
 
 const cognito = new CognitoIdentityProvider();
 const USER_POOL_ID = process.env.USER_POOL_ID;

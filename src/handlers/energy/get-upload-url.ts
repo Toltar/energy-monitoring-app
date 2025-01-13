@@ -18,7 +18,17 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
   });
   try {
     const authorizer = event.requestContext.authorizer;
-    const userId: string = authorizer?.claims.sub;
+
+    if (!authorizer) {
+      logger.warn('Unauthorized request');
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ message: 'Unauthorized' })
+      }
+    }
+
+    const userId: string = authorizer.claims.sub;
+    const username: string = authorizer.claims['cognito:username'];
 
     if (!userId) {
       logger.warn('Unauthorized request');
@@ -36,7 +46,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
       Key: fileKey,
       ContentType: 'text/csv',
       Metadata: {
-        userId: userId,
+        userid: userId,
+        username: username
       }
     });
     const presignedUrl = await getSignedUrl(s3, putObjectCommand, { expiresIn: URL_EXPIRATION })

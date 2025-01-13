@@ -39,17 +39,24 @@ export const handler: S3Handler = async (event: S3Event, context: Context) => {
       });
 
       logger.info({ key }, 'Retrieving the object');
-      const s3Object = await s3.send(getObjectCommand);
+      const { Metadata, Body } = await s3.send(getObjectCommand);
       logger.info({ key }, 'Object successfully retrieved');
 
       logger.info({ key }, 'Validating S3 object');
-      const userId = s3Object.Metadata?.userid;
-      if (!userId) {
-        logger.warn('No user ID found in metadata');
+      if (!Metadata) {
+        logger.error('Unable to process record: No object metadata found');
         continue;
       }
 
-      if (!s3Object.Body) {
+      const userId = Metadata.userid;
+
+      if (!userId) {
+        logger.error('Unable to process record: No user ID found in object metadata');
+        continue;
+      }
+
+
+      if (!Body) {
         logger.error('Empty object body provided');
         continue;
       }
@@ -57,7 +64,7 @@ export const handler: S3Handler = async (event: S3Event, context: Context) => {
       logger.info({ key }, 'Parsing S3 object');
 
       // Get file contents as a string
-      const fileContent = await s3Object.Body.transformToString();
+      const fileContent = await Body.transformToString();
 
       const parsedData: EnergyDataRow[] = await new Promise((resolve, reject) => {
         csv.parse(fileContent, {
