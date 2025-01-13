@@ -1,17 +1,18 @@
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { describe, afterAll, it, expect, vi, beforeEach } from 'vitest';
 import { mockClient } from 'aws-sdk-client-mock';
 import { handler } from '../get-history';
-import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
 const ddbMock = mockClient(DynamoDBDocumentClient);
 
-vi.mock('pino', () => ({
-  default: () => ({
+vi.mock('../util/logger', () => ({
+  createLogger: () => ({
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn()
-  })
+  }),
+  redactConfig: {}
 }));
 
 describe('Historical Data Lambda', () => {

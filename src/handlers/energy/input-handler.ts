@@ -4,13 +4,11 @@ import { PutCommand, DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { createLogger, redactConfig } from '../utils/logger';
 import { dateInputStringToDate, isValidDateStringInput } from '../utils/date-input-string';
 import { EnergyUsageDataInput } from '../../types/energy-data';
-import { emailRegex } from '../auth/util';
 
 const client = new DynamoDBClient();
 const docClient = DynamoDBDocumentClient.from(client);
 const ENERGY_USAGE_TABLE = process.env.ENERGY_USAGE_TABLE!;
 
-// TODO: Add more errors along the lines of invalid data 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, context: Context) => {
   const logger = createLogger({
     context,

@@ -1,2 +1,1 @@
-export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+export const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/

@@ -1,9 +1,9 @@
-import { CognitoIdentityProvider } from '@aws-sdk/client-cognito-identity-provider';
+import { CognitoIdentityProviderClient, InitiateAuthCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { APIGatewayEvent, APIGatewayProxyHandler, Context } from 'aws-lambda';
 import { createLogger, redactConfig } from '../utils/logger';
 import { emailRegex } from '../utils/email';
 
-const cognito = new CognitoIdentityProvider();
+const cognito = new CognitoIdentityProviderClient();
 const CLIENT_ID = process.env.CLIENT_ID;
 interface SignInRequest {
   email: string;
@@ -47,14 +47,14 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
       };
     }
 
-    const { AuthenticationResult } = await cognito.initiateAuth({
+    const { AuthenticationResult } = await cognito.send(new InitiateAuthCommand({
       AuthFlow: 'USER_PASSWORD_AUTH',
       ClientId: CLIENT_ID,
       AuthParameters: {
         USERNAME: email,
         PASSWORD: password
       }
-    });
+    }));
 
     if (!AuthenticationResult) {
       logger.error('Authentication result is undefined');

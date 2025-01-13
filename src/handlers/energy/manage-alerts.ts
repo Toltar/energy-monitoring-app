@@ -3,7 +3,7 @@ import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { APIGatewayEvent, APIGatewayProxyHandler, Context } from 'aws-lambda';
 import { createLogger, redactConfig } from '../utils/logger';
 import { SNS, SubscribeCommand } from '@aws-sdk/client-sns';
-import { emailRegex } from '../auth/util';
+import { emailRegex } from '../utils/email';
 
 const client = new DynamoDBClient();
 const docClient = DynamoDBDocumentClient.from(client);

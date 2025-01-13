@@ -1,9 +1,9 @@
-import { CognitoIdentityProvider } from '@aws-sdk/client-cognito-identity-provider';
+import { CognitoIdentityProviderClient, SignUpCommand, AdminConfirmSignUpCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { APIGatewayEvent, APIGatewayProxyHandler, Context } from 'aws-lambda';
 import { createLogger, redactConfig } from '../utils/logger';
 import { emailRegex } from '../utils/email';
 
-const cognito = new CognitoIdentityProvider();
+const cognito = new CognitoIdentityProviderClient();
 const USER_POOL_ID = process.env.USER_POOL_ID;
 const CLIENT_ID = process.env.CLIENT_ID;
 
@@ -21,16 +21,6 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
     },
   });
   try {
-    if (!CLIENT_ID) {
-      logger.error('CLIENT_ID is undefined');
-      return { statusCode: 500, body: JSON.stringify({ message: 'Fatal Error' }) };
-    }
-
-    if (!USER_POOL_ID) {
-      logger.error('USER_POOL_ID is undefined');
-      return { statusCode: 500, body: JSON.stringify({ message: 'Fatal Error' }) };
-    }
-
     if (!event.body) {
       logger.warn('Missing request body');
       return {
@@ -57,21 +47,21 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
       };
     }
 
-    const signUpResult = await cognito.signUp({
+    const signUpResult = await cognito.send(new SignUpCommand({
       ClientId: CLIENT_ID,
       Username: email,
       Password: password,
       UserAttributes: [
         { Name: 'email', Value: email },
       ]
-    });
+    }));
 
     logger.info({ userId: signUpResult.UserSub }, 'User signup successful');
 
-    await cognito.adminConfirmSignUp({
+    await cognito.send(new AdminConfirmSignUpCommand({
       UserPoolId: USER_POOL_ID,
       Username: email
-    });
+    }));
 
     logger.info({ userId: signUpResult.UserSub }, 'User confirmation successful');
 
@@ -83,8 +73,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
       }),
     };
   } catch (error) {
-    logger.error({ err: error }, 'Signup process failed');
-    if (error && error instanceof Error) {
+    if (error instanceof Error) {
+      logger.error({ err: error, message: error.message }, 'Signup process failed');
       return {
         statusCode: error.name === 'UsernameExistsException' ? 409 : 500,
         body: JSON.stringify({
@@ -92,6 +82,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
         })
       };
     }
+    logger.error({ err: error }, 'Signup process failed');
     return {
       statusCode: 500,
       body: JSON.stringify({ message: 'Fatal Error' })

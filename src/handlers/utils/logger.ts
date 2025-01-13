@@ -12,7 +12,7 @@ export function createLogger({ context, event, additionalOptions = {} }: LoggerO
     {} : {
       path: event.path,
       method: event.httpMethod,
-      cognitoUser: event.requestContext.authorizer?.sub
+      cognitoUser: event.requestContext && event.requestContext.authorizer ? event.requestContext.authorizer.sub : ''
     };
   const baseOptions: pino.LoggerOptions = {
     level: process.env.LOG_LEVEL || 'info',

@@ -72,6 +72,15 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       validation: acm.CertificateValidation.fromDns(zone),
     }) : undefined;
 
+    // API Gateway
+    const apiDomainName: apigateway.DomainNameOptions | undefined = props.apiDomainName !== undefined && certificate !== undefined ? {
+      domainName: props.apiDomainName,
+      certificate: certificate
+    } : undefined;
+    const restApi = new apigateway.RestApi(this, 'energy-monitoring-rest-api-gateway', {
+      restApiName: 'Energey Monitoring API',
+      domainName: apiDomainName
+    });
 
     // Cognito
     const userPool = new cognito.UserPool(this, 'energy-monitoring-user-pool', {
@@ -85,7 +94,6 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
           mutable: true,
         },
       },
-      accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       passwordPolicy: {
         minLength: 8,
         requireLowercase: true,
@@ -149,6 +157,7 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
       defaultValue: 0,
       metricValue: '1'
     });
+
 
     // Lambda Functions
     const commonLambdaConfig = {
@@ -279,15 +288,6 @@ export class EnergyMonitoringAppStack extends cdk.Stack {
     );
 
 
-    // API Gateway
-    const apiDomainName: apigateway.DomainNameOptions | undefined = props.apiDomainName !== undefined && certificate !== undefined ? {
-      domainName: props.apiDomainName,
-      certificate: certificate
-    } : undefined;
-    const restApi = new apigateway.RestApi(this, 'energy-monitoring-rest-api-gateway', {
-      restApiName: 'Energey Monitoring API',
-      domainName: apiDomainName
-    });
 
     // Authorizer
     const authorizer = new apigateway.CfnAuthorizer(this, 'CognitoAuthorizer', {

@@ -1,0 +1,484 @@
+digraph "Diagram" {
+  splines = "ortho";
+  pad = "1.0";
+  nodesep = "0.60";
+  ranksep = "0.75";
+  fontname = "Sans-Serif";
+  fontsize = "15";
+  dpi = "200";
+  rankdir = "BT";
+  compound = "true";
+  fontcolor = "#222222";
+  edge [
+    color = "#D5871488",
+    penwidth = 2,
+    arrowhead = "dot",
+    arrowtail = "dot",
+  ];
+  node [
+    shape = "box",
+    style = "rounded",
+    fixedsize = true,
+    width = 1.7,
+    height = 1.7,
+    labelloc = "c",
+    imagescale = true,
+    fontname = "Sans-Serif",
+    fontsize = 8,
+    margin = 8,
+  ];
+  subgraph "EnergyMonitoringAppStack" {
+    subgraph "cluster-SubGraph.EnergyMonitoringAppStack" {
+      graph [
+        label = "EnergyMonitoringAppStack",
+        labelloc = "b",
+        labeljust = "l",
+        margin = "10",
+        fontsize = "16",
+        penwidth = "2",
+        pencolor = "#888888",
+        style = "filled,rounded",
+        fillcolor = "#e4e4e4",
+      ];
+      "EnergyMonitoringAppStack/energy-monitoring-vpc" [
+        label = "\nenergy-monitoring-vpc",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Networking-Content/64/Arch_Amazon-Virtual-Private-Cloud_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.4819999999999998,
+      ];
+      "EnergyMonitoringAppStack/energy-monitoring-lambda-sg" [
+        label = " energy monitoring\nlambda sg",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/security_group.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.4819999999999998,
+      ];
+      "EnergyMonitoringAppStack/Certificate" [
+        label = " Certificate",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Security-Identity-Compliance/64/Arch_AWS-Certificate-Manager_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 1.2,
+        height = 1.466,
+      ];
+      "EnergyMonitoringAppStack/energy-monitoring-rest-api-gateway" [
+        label = " energy monitoring\nrest api gateway",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Networking-Content/64/Arch_Amazon-API-Gateway_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 1.2,
+        height = 1.682,
+      ];
+      "EnergyMonitoringAppStack/energy-monitoring-user-pool" [
+        label = " energy monitoring\nuser pool",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Security-Identity-Compliance/64/Arch_Amazon-Cognito_64.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 1.2,
+        height = 1.682,
+      ];
+      "EnergyMonitoringAppStack/energy-monitoring-bucket" [
+        label = " energy monitoring\nbucket",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Storage/64/Arch_Amazon-S3-Standard_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.4819999999999998,
+      ];
+      "EnergyMonitoringAppStack/energy-monitoring-alerts-topic" [
+        label = " energy monitoring\nalerts topic",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_App-Integration/Arch_64/Arch_AWS-Simple-Notification-Service_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.4819999999999998,
+      ];
+      "EnergyMonitoringAppStack/energy-monitoring-dynamo-database" [
+        label = " energy monitoring\ndynamo database",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Database/64/Arch_Amazon-DynamoDB_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 1.2,
+        height = 1.682,
+      ];
+      "EnergyMonitoringAppStack/energy-monitoring-user-threshhold-alerts-db" [
+        label = " energy monitoring\nuser threshhold\nalerts db",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Database/64/Arch_Amazon-DynamoDB_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 1.2,
+        height = 1.898,
+      ];
+      "EnergyMonitoringAppStack/lambda-log-group" [
+        label = " lambda-log-group",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Resource/Res_Management-Governance/Res_48_Dark/Res_Amazon-Cloudwatch_Logs_48_Dark_gen.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.266,
+      ];
+      "EnergyMonitoringAppStack/error-metrics-filter" [
+        label = " error-metrics-filter",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/cloudwatch_metric_filter.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.266,
+      ];
+      "EnergyMonitoringAppStack/signup-lambda" [
+        label = " signup-lambda",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Compute/64/Arch_AWS-Lambda_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.266,
+      ];
+      "EnergyMonitoringAppStack/signin-lambda" [
+        label = " signin-lambda",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Compute/64/Arch_AWS-Lambda_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.266,
+      ];
+      "EnergyMonitoringAppStack/energy-input-lambda" [
+        label = " energy-input-lambda",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Compute/64/Arch_AWS-Lambda_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.266,
+      ];
+      "EnergyMonitoringAppStack/energy-get-upload-url-lambda" [
+        label = " energy get upload\nurl lambda",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Compute/64/Arch_AWS-Lambda_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.4819999999999998,
+      ];
+      "EnergyMonitoringAppStack/energy-useage-process-upload-lambda" [
+        label = " energy useage\nprocess upload lambda",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Compute/64/Arch_AWS-Lambda_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.4819999999999998,
+      ];
+      "EnergyMonitoringAppStack/energy-useage-alert-manager-lambda" [
+        label = " energy useage alert\nmanager lambda",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Compute/64/Arch_AWS-Lambda_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.4819999999999998,
+      ];
+      "EnergyMonitoringAppStack/energy-useage-incoming-data-alert-lambda" [
+        label = " energy useage\nincoming data alert\nlambda",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Compute/64/Arch_AWS-Lambda_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.6979999999999995,
+      ];
+      "EnergyMonitoringAppStack/energy-monitoring-history-lambda" [
+        label = " energy monitoring\nhistory lambda",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Compute/64/Arch_AWS-Lambda_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 2,
+        height = 2.4819999999999998,
+      ];
+      "EnergyMonitoringAppStack/CognitoAuthorizer" [
+        label = " ApiGateway\nAuthorizer\nCognitoAuthorizer",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Networking-Content/64/Arch_Amazon-API-Gateway_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 1.2,
+        height = 1.898,
+      ];
+      "EnergyMonitoringAppStack/ApiAliasRecord" [
+        label = " ApiAliasRecord",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Resource/Res_Networking-and-Content-Delivery/Res_48_Dark/Res_Amazon-Route-53-Hosted-Zone_48_Dark_gen.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 1.2,
+        height = 1.466,
+      ];
+      "EnergyMonitoringAppStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role" [
+        label = " Role",
+        fontsize = 12,
+        image = "/home/madmin/.nvm/versions/node/v22.11.0/lib/node_modules/cdk-dia/icons/aws/Service/Arch_Security-Identity-Compliance/64/Arch_AWS-Identity-and-Access-Management_64@5x.png",
+        imagescale = "true",
+        imagepos = "tc",
+        penwidth = "0",
+        shape = "node",
+        fixedsize = "true",
+        labelloc = "b",
+        width = 1.2,
+        height = 1.466,
+      ];
+    }
+  }
+  "EnergyMonitoringAppStack/energy-monitoring-lambda-sg" -> "EnergyMonitoringAppStack/energy-monitoring-vpc" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-rest-api-gateway" -> "EnergyMonitoringAppStack/Certificate" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-rest-api-gateway" -> "EnergyMonitoringAppStack/CognitoAuthorizer" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-rest-api-gateway" -> "EnergyMonitoringAppStack/signup-lambda" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-rest-api-gateway" -> "EnergyMonitoringAppStack/signin-lambda" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-rest-api-gateway" -> "EnergyMonitoringAppStack/energy-input-lambda" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-rest-api-gateway" -> "EnergyMonitoringAppStack/energy-get-upload-url-lambda" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-rest-api-gateway" -> "EnergyMonitoringAppStack/energy-useage-alert-manager-lambda" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-rest-api-gateway" -> "EnergyMonitoringAppStack/energy-monitoring-history-lambda" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-bucket" -> "EnergyMonitoringAppStack/energy-useage-process-upload-lambda" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/error-metrics-filter" -> "EnergyMonitoringAppStack/lambda-log-group" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/signup-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-user-pool" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/signup-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-vpc" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/signup-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-lambda-sg" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/signup-lambda" -> "EnergyMonitoringAppStack/lambda-log-group" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/signin-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-user-pool" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/signin-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-vpc" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/signin-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-lambda-sg" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/signin-lambda" -> "EnergyMonitoringAppStack/lambda-log-group" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-input-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-dynamo-database" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-input-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-vpc" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-input-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-lambda-sg" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-input-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-user-pool" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-input-lambda" -> "EnergyMonitoringAppStack/lambda-log-group" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-get-upload-url-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-bucket" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-get-upload-url-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-vpc" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-get-upload-url-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-lambda-sg" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-get-upload-url-lambda" -> "EnergyMonitoringAppStack/lambda-log-group" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-process-upload-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-bucket" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-process-upload-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-dynamo-database" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-process-upload-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-vpc" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-process-upload-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-lambda-sg" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-process-upload-lambda" -> "EnergyMonitoringAppStack/lambda-log-group" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-alert-manager-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-alerts-topic" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-alert-manager-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-user-threshhold-alerts-db" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-alert-manager-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-vpc" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-alert-manager-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-lambda-sg" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-alert-manager-lambda" -> "EnergyMonitoringAppStack/lambda-log-group" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-incoming-data-alert-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-alerts-topic" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-incoming-data-alert-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-dynamo-database" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-incoming-data-alert-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-user-threshhold-alerts-db" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-incoming-data-alert-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-vpc" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-incoming-data-alert-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-lambda-sg" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-useage-incoming-data-alert-lambda" -> "EnergyMonitoringAppStack/lambda-log-group" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-history-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-dynamo-database" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-history-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-vpc" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-history-lambda" -> "EnergyMonitoringAppStack/energy-monitoring-lambda-sg" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/energy-monitoring-history-lambda" -> "EnergyMonitoringAppStack/lambda-log-group" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/CognitoAuthorizer" -> "EnergyMonitoringAppStack/energy-monitoring-rest-api-gateway" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/CognitoAuthorizer" -> "EnergyMonitoringAppStack/energy-monitoring-user-pool" [
+    dir = "both",
+  ];
+  "EnergyMonitoringAppStack/ApiAliasRecord" -> "EnergyMonitoringAppStack/energy-monitoring-rest-api-gateway" [
+    dir = "both",
+  ];
+}
