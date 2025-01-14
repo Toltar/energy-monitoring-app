@@ -38,7 +38,7 @@ I have some environment variables that I have for if you ever want to use a doma
 
 ## API Documentation
 
-You can find the api documentation at the root directory [here](openapi.yaml) within the project in OpenApi 3.0 docs form in YAML. 
+You can find the api documentation at the root directory [here](openapi.yaml) within the project in OpenApi 3.0 docs form in YAML. Throw the contents of the file into [the swagger editor](editor.swagger.io) to read the API docs.
 
 ## Useful project commands
 

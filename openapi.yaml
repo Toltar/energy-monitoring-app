@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Home Energy Monitoring API
+  title: Energy Monitoring API
   description: API for monitoring and managing home energy consumption
   version: 1.0.0
 
