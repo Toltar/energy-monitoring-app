@@ -1,4 +1,5 @@
 .env
+!.env.testing
 *.js
 !jest.config.js
 *.d.ts

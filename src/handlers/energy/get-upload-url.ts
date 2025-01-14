@@ -41,6 +41,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayEvent, co
     logger.info({ userId }, 'Getting presigned url');
 
     const fileKey = `uploads/${userId}/${v4()}.csv`;
+    console.log('I made it to file key');
     const putObjectCommand = new PutObjectCommand({
       Bucket: BUCKET_NAME,
       Key: fileKey,

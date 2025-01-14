@@ -8,7 +8,7 @@ see the architecture diagram in the root directory as well.
 
 ## Postman collection
 
-A postman collection is provided for you [here](api.postman_collection.json) for you to use when you have deployed the API.
+A postman collection is provided [here](api.postman_collection.json). Use it to test the api to see it working end to end.
 
 ## Deploying the API
 
@@ -29,6 +29,12 @@ npx cdk destroy
 ```
 
 Then try to redeploy it again with just `npm run deploy`. No need to re-run `npm run bootstrap` and `npm run synth` again when you did it for the first time.
+
+After that go into the Cloudformation console and search for the EnergyApiMonitoring stack outputs for the API gateway URL. Or you can even just go to the API Gatway to find it as well.
+
+### Environment Variables
+
+I have some environment variables that I have for if you ever want to use a domain name. It was easier to me than having to search the CDK outputs for the 
 
 ## API Documentation
 
